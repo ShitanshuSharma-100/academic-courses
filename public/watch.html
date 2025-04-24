@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Purchased Videos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #watchList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .video-card {
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .video-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+      background-color: #000;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin: 30px auto 0;
+      text-align: center;
+      background-color: #333;
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+
+    .back-btn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Purchased Videos</h1>
+  <div id="watchList"></div>
+  <a class="back-btn" href="/dashboard.html">⬅ Back to Dashboard</a>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    async function fetchPurchasedVideos() {
+      try {
+        const response = await fetch('/api/purchase/my', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch videos');
+        }
+
+        const videos = await response.json();
+        const container = document.getElementById('watchList');
+        container.innerHTML = '';
+
+        if (videos.length === 0) {
+          container.innerHTML = '<p style="text-align:center;">No videos purchased yet.</p>';
+          return;
+        }
+
+        videos.forEach(video => {
+          const card = document.createElement('div');
+          card.className = 'video-card';
+
+          card.innerHTML = `
+            <h3>${video.title}</h3>
+            <video controls controlsList="nodownload">
+              <source src="${video.filePath}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('Error fetching purchased videos:', err);
+        document.getElementById('watchList').innerHTML = '<p style="text-align:center;">Failed to load videos.</p>';
+      }
+    }
+
+    fetchPurchasedVideos();
+  </script>
+</body>
+</html>

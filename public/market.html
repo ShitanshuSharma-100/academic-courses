@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #marketList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .video-card {
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .video-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .video-card .thumbnail {
+      background-color: #333;
+      width: 100%;
+      height: 160px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .buy-btn {
+      background-color: #00b894;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .buy-btn:hover {
+      background-color: #019875;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background-color: #333;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    .btn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>Video Marketplace</h1>
+  <div id="marketList"></div>
+  <a class="btn" href="/dashboard.html">⬅ Back to Account</a>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    async function fetchVideos() {
+      try {
+        const response = await fetch('/api/video/list');
+        const videos = await response.json();
+
+        const container = document.getElementById('marketList');
+        container.innerHTML = '';
+
+        videos.forEach((video) => {
+          const card = document.createElement('div');
+          card.className = 'video-card';
+
+          card.innerHTML = `
+            <h3>${video.title}</h3>
+            <div class="thumbnail">
+              <p style="padding-top: 70px;">🔒 Locked</p>
+            </div>
+            <button class="buy-btn" onclick="buyVideo('${video._id}', '${video.title}')">Buy</button>
+          `;
+
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error loading marketplace:', err);
+      }
+    }
+
+    async function buyVideo(videoId, title) {
+      try {
+        const response = await fetch(`/api/purchase/${videoId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const result = await response.json();
+        alert(result.message || `Purchased "${title}" ✅`);
+      } catch (err) {
+        alert(`Failed to purchase "${title}". Please try again.`);
+        console.error(err);
+      }
+    }
+
+    fetchVideos();
+  </script>
+</body>
+</html>

@@ -1,30 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
-const mongoose = require('mongoose');
 
 const Purchase = require('../models/purchase');
 const Video = require('../models/Video');
 
 // ✅ Purchase a video
 router.post('/:videoId', verifyToken, async (req, res) => {
-  console.log('Decoded user:', req.user);
-const userId = req.user.id;
-
+  const userId = req.user.id;
   const videoId = req.params.videoId;
 
   try {
     // Check if video exists
     const video = await Video.findById(videoId);
-    if (!video) return res.status(404).json({ message: 'Video not found' });
+    if (!video) {
+      return res.status(404).json({ message: 'Video not found' });
+    }
 
-    // Check if user already purchased it
+    // Check if already purchased
     const existingPurchase = await Purchase.findOne({ userId, videoId });
     if (existingPurchase) {
       return res.status(400).json({ message: 'You already purchased this video' });
     }
 
-    // Save purchase to DB
+    // Create new purchase
     const purchase = new Purchase({ userId, videoId });
     await purchase.save();
 
@@ -42,12 +41,13 @@ router.get('/my', verifyToken, async (req, res) => {
   try {
     const purchases = await Purchase.find({ userId }).populate('videoId');
 
-    const purchasedVideos = purchases.map(p => {
-      return {
-        title: p.videoId?.title,
-        filePath: p.videoId?.filePath,
-      };
-    });
+    const purchasedVideos = purchases
+      .filter(p => p.videoId) // Ensure the video still exists
+      .map(p => ({
+        id: p.videoId._id,
+        title: p.videoId.title,
+        filePath: p.videoId.filePath,
+      }));
 
     res.status(200).json(purchasedVideos);
   } catch (err) {
@@ -55,6 +55,5 @@ router.get('/my', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch purchased videos' });
   }
 });
-
 
 module.exports = router;

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 module.exports = async function (req, res, next) {
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
@@ -12,16 +12,20 @@ module.exports = async function (req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Ensure user ID is present
+    // Check if user ID exists in token
     if (!decoded.id) {
       return res.status(400).json({ message: 'Invalid token payload: missing user ID.' });
     }
 
-    req.user = { id: decoded.id }; // ✅ Make sure req.user.id is available
+    // Attach user info to request object
+    req.user = {
+      id: decoded.id,
+      role: decoded.role || 'student', // helpful if you're using roles
+    };
 
     next();
   } catch (err) {
     console.error('JWT Verification Error:', err);
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ message: 'Invalid or expired token.' });
   }
 };

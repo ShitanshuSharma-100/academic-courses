@@ -1,0 +1,109 @@
+<!-- public/upload.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Video</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background-color: #1f1f1f;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      width: 400px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"],
+    input[type="file"],
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    input[type="text"],
+    input[type="file"] {
+      background-color: #2c2c2c;
+      color: #ffffff;
+    }
+    button {
+      background-color: #6200ee;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #3700b3;
+    }
+    .redirect-button {
+      background-color: #03dac5;
+      margin-top: 20px;
+    }
+    .redirect-button:hover {
+      background-color: #018786;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Video</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+      <input type="text" id="title" placeholder="Video Title" required />
+      <input type="text" id="description" placeholder="Video Description" />
+      <input type="text" id="thumbnailUrl" placeholder="Thumbnail URL" />
+      <input type="number" id="price" placeholder="Price in $" step="0.01" required />
+      <input type="file" id="video" required />
+      <button type="submit">Upload Video</button>
+    </form>
+    <button class="redirect-button" onclick="window.location.href='adminpage.html'">Go to Admin Page</button>
+  </div>
+
+  <script>
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const thumbnailUrl = document.getElementById('thumbnailUrl').value;
+      const price = document.getElementById('price').value;
+      const videoFile = document.getElementById('video').files[0];
+
+      const token = localStorage.getItem('token');
+
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('thumbnailUrl', thumbnailUrl);
+      formData.append('price', price);
+      formData.append('video', videoFile);
+
+      const response = await fetch('http://localhost:5000/api/video/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      alert(data.message);
+      if (response.ok) {
+      document.getElementById('upload-form').reset();
+    }
+    });
+  </script>
+</body>
+</html>

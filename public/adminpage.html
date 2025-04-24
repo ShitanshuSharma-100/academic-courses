@@ -49,28 +49,47 @@
       color: #00cec9;
       text-decoration: none;
     }
+
+    #error-message {
+      color: red;
+      text-align: center;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>All Uploaded Videos</h1>
+  
+  <!-- Error message for failed video fetch -->
+  <div id="error-message">
+    Failed to load videos. Please try again later.
+  </div>
+
+  <!-- Video list container -->
   <div class="video-list" id="videoList"></div>
+
   <a href="/upload.html" class="back-btn">⬅ Back to Upload Page</a>
 
   <script>
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
 
     async function loadAllVideos() {
       try {
-        const res = await fetch('/api/video/all', {
+        const res = await fetch('/video/all', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
+        if (!res.ok) {
+          throw new Error('Failed to fetch videos');
+        }
+
         const videos = await res.json();
         const container = document.getElementById('videoList');
         container.innerHTML = '';
 
+        // Display the videos
         videos.forEach(video => {
           const card = document.createElement('div');
           card.className = 'video-card';
@@ -83,11 +102,17 @@
           `;
           container.appendChild(card);
         });
+
+        // Hide the error message if videos are loaded successfully
+        document.getElementById('error-message').style.display = 'none';
       } catch (err) {
         console.error('Failed to load videos', err);
+        // Display error message when videos fail to load
+        document.getElementById('error-message').style.display = 'block';
       }
     }
 
+    // Load all videos on page load
     loadAllVideos();
   </script>
 </body>

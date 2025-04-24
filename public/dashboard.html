@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+    }
+
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 300px;
+      margin: 0 auto 40px;
+    }
+
+    .btn {
+      background-color: #1f1f1f;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 15px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #333;
+    }
+
+    .logout {
+      margin-top: 40px;
+      background-color: #8b0000;
+      border: none;
+    }
+
+    @media (min-width: 600px) {
+      .btn-container {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    #purchasedList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 1000px;
+      margin: 60px auto 0;
+      text-align: left;
+    }
+
+    .video-card {
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .video-card video {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .video-card h3 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Your Dashboard</h1>
+
+  <div class="btn-container">
+    <a class="btn" href="/market.html">🎬 Marketplace</a>
+    <a class="btn" href="/watch.html">📺 My Purchases</a>
+  </div>
+
+  <h2>Your Purchased Videos</h2>
+  <div id="purchasedList"></div>
+
+  <button class="btn logout" onclick="logout()">Logout</button>
+
+  <script>
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+
+    async function loadPurchasedVideos() {
+      const token = localStorage.getItem('token');
+
+      try {
+        const res = await fetch('/api/purchase/my', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const videos = await res.json();
+        const list = document.getElementById('purchasedList');
+        list.innerHTML = '';
+
+        if (videos.length === 0) {
+          list.innerHTML = '<p style="text-align:center;">You haven\'t purchased any videos yet.</p>';
+          return;
+        }
+
+        videos.forEach(video => {
+          const card = document.createElement('div');
+          card.classList.add('video-card');
+          card.innerHTML = `
+            <h3>${video.title}</h3>
+            <video controls controlsList="nodownload">
+              <source src="${video.filePath}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          `;
+          list.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('Error loading purchases:', err);
+      }
+    }
+
+    loadPurchasedVideos();
+  </script>
+</body>
+</html>

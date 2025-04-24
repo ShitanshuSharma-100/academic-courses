@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>All Uploaded Videos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .video-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .video-card {
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .video-card h3 {
+      margin-top: 0;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    a.back-btn {
+      display: block;
+      text-align: center;
+      margin-top: 40px;
+      color: #00cec9;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>All Uploaded Videos</h1>
+  <div class="video-list" id="videoList"></div>
+  <a href="/upload.html" class="back-btn">⬅ Back to Upload Page</a>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    async function loadAllVideos() {
+      try {
+        const res = await fetch('/api/video/all', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const videos = await res.json();
+        const container = document.getElementById('videoList');
+        container.innerHTML = '';
+
+        videos.forEach(video => {
+          const card = document.createElement('div');
+          card.className = 'video-card';
+          card.innerHTML = `
+            <h3>${video.title}</h3>
+            <video controls>
+              <source src="${video.filePath}" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Failed to load videos', err);
+      }
+    }
+
+    loadAllVideos();
+  </script>
+</body>
+</html>

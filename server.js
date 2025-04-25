@@ -6,7 +6,7 @@ const purchaseRoutes = require('./routes/purchase');
 const path = require('path');
 const connectDB = require('./config/db');
 
-// Load environment variables from .env file
+// Load environment variables from .env file.
 dotenv.config();
 
 // Connect to MongoDB using the connection string from the environment variables

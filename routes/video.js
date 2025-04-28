@@ -57,6 +57,11 @@ router.get('/list', async (req, res) => {
 // ✅ Admin view - All uploaded videos
 router.get('/all', verifyToken, async (req, res) => {
   try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    }
+
     const videos = await Video.find({});
     const formatted = videos.map(v => ({
       title: v.title,
@@ -64,6 +69,7 @@ router.get('/all', verifyToken, async (req, res) => {
       description: v.description,
       price: v.price,
     }));
+
     res.status(200).json(formatted);
   } catch (err) {
     console.error('Error loading all videos:', err);

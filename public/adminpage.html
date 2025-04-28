@@ -75,7 +75,7 @@
 
     async function loadAllVideos() {
       try {
-        const res = await fetch('https://academic-courses.onrender.com/api/video/all', {
+        const res = await fetch('/video/all', {
           headers: {
             Authorization: `Bearer ${token}`
           }

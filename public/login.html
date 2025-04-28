@@ -100,50 +100,60 @@
   </div>
 
   <script>
-    async function handleLogin(role) {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+  async function handleLogin(role) {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-      if (!email || !password) {
-        alert('Please enter both email and password.');
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+
+    // Check for hardcoded admin credentials
+    if (role === 'admin') {
+      const isAdmin = (
+        email === 'shitanshu@offshoremarketers.com' &&
+        password === 'Pandit@100'
+      );
+
+      if (!isAdmin) {
+        alert('Invalid admin credentials.');
         return;
       }
-
-      // Check for hardcoded admin credentials
-      if (role === 'admin') {
-        const isAdmin = (
-          email === 'shitanshu@offshoremarketers.com' &&
-          password === 'Pandit@100'
-        );
-
-        if (!isAdmin) {
-          alert('Invalid admin credentials.');
-          return;
-        }
-      }
-
-      try {
-        const res = await fetch('https://academic-courses.onrender.com/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, role })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          localStorage.setItem('token', data.token);
-          alert('Login successful! Redirecting...');
-          window.location.href = role === 'admin' ? 'upload.html' : 'dashboard.html';
-        } else {
-          alert(data.message || 'Invalid credentials');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error connecting to server');
-      }
     }
-  </script>
+
+    try {
+      const res = await fetch('https://academic-courses.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }) // ✅ no role sent here
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // ✅ Save token correctly
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userRole', data.user.role); // optional but useful
+
+        alert('Login successful! Redirecting...');
+
+        // ✅ Redirect correctly
+        if (role === 'admin') {
+          window.location.href = 'adminpage.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        alert(data.message || 'Invalid credentials');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error connecting to server');
+    }
+  }
+</script>
+
 
 </body>
 </html>

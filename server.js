@@ -29,7 +29,7 @@ app.use('/api/video', videoRoutes);
 app.use('/api/purchase', purchaseRoutes);
 
 // Serve uploaded video files
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // Sample route to confirm server is working
 app.get('/', (req, res) => {

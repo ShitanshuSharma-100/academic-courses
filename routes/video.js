@@ -60,7 +60,7 @@ router.get('/all', verifyToken, async (req, res) => {
     const videos = await Video.find({});
     const formatted = videos.map(v => ({
       title: v.title,
-      filePath: v.filePath,
+      filePath: `${process.env.BASE_URL || 'http://localhost:5000'}${v.filePath}`,
       description: v.description,
       price: v.price,
     }));

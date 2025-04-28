@@ -18,10 +18,7 @@ module.exports = async function (req, res, next) {
     }
 
     // Attach user info to request object
-    req.user = {
-      id: decoded.id,
-      role: decoded.role || 'student', // helpful if you're using roles
-    };
+    req.user = { id: decoded.id };
 
     next();
   } catch (err) {

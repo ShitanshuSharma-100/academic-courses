@@ -96,10 +96,10 @@
           card.className = 'video-card';
           card.innerHTML = `
             <h3>${video.title}</h3>
-            <video controls>
-              <source src="${video.filePath}" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+             <video controls>
+               <source src="${BASE_URL}${video.filePath}" type="video/mp4" />
+               Your browser does not support the video tag.
+             </video>
           `;
           container.appendChild(card);
         });

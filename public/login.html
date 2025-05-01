@@ -133,7 +133,7 @@
 
       if (res.ok) {
         // ✅ Save token correctly
-        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('token', data.accessToken);
         localStorage.setItem('userRole', data.user.role); // optional but useful
 
         alert('Login successful! Redirecting...');

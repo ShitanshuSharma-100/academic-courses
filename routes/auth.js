@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// User Login
+// User Login (with access token + refresh token)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -50,16 +50,27 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Sign JWT with user ID and role
-    const token = jwt.sign(
+    // Sign JWT access token (short-lived)
+    const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '12h' }
+      { expiresIn: '15m' }  // short-lived access token
     );
+
+    // Sign JWT refresh token (long-lived)
+    const refreshToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_REFRESH_SECRET,  // separate secret for refresh token
+      { expiresIn: '7d' }  // long-lived refresh token
+    );
+
+    // Optionally, store the refresh token in the database (for better security)
+    // await User.findByIdAndUpdate(user._id, { refreshToken });
 
     res.status(200).json({
       message: 'Login successful',
-      token,
+      accessToken,
+      refreshToken,  // send refresh token to the client
       user: {
         id: user._id,
         username: user.username,
@@ -71,6 +82,25 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
+});
+
+// Refresh Access Token Route (called when access token expires)
+router.post('/refresh-token', (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ message: 'Missing refresh token' });
+
+  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: 'Invalid refresh token' });
+
+    // Create new access token using the refresh token payload (user ID)
+    const newAccessToken = jwt.sign(
+      { id: decoded.id, role: decoded.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }  // new short-lived access token
+    );
+
+    res.json({ accessToken: newAccessToken });
+  });
 });
 
 module.exports = router;

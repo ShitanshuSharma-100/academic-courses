@@ -73,7 +73,7 @@
   <script>
     const token = localStorage.getItem('authToken');
     console.log('Token being used:', token); 
-
+  
     async function loadAllVideos() {
       try {
         const res = await fetch('/api/video/all', {
@@ -81,41 +81,42 @@
             Authorization: `Bearer ${token}`
           }
         });
-
+  
         if (!res.ok) {
           throw new Error('Failed to fetch videos');
         }
-
+  
         const videos = await res.json();
         const container = document.getElementById('videoList');
-        const BASE_URL = 'https://academic-courses.onrender.com';
         container.innerHTML = '';
-
+  
         // Display the videos
         videos.forEach(video => {
           const card = document.createElement('div');
           card.className = 'video-card';
+  
+          // Use Cloudinary URL instead of local file path
           card.innerHTML = `
             <h3>${video.title}</h3>
-             <video controls>
-               <source src="${video.filePath}" type="video/mp4" />
-               Your browser does not support the video tag.
-             </video>
+            <video controls width="100%" preload="metadata">
+              <source src="${video.videoUrl}" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           `;
           container.appendChild(card);
         });
-
-        // Hide the error message if videos are loaded successfully
+  
+        // Hide error message if successful
         document.getElementById('error-message').style.display = 'none';
       } catch (err) {
         console.error('Failed to load videos', err);
-        // Display error message when videos fail to load
         document.getElementById('error-message').style.display = 'block';
       }
     }
-
-    // Load all videos on page load
+  
+    // Load videos on page load
     loadAllVideos();
   </script>
+  
 </body>
 </html>

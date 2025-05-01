@@ -1,42 +1,51 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const verifyToken = require('../middleware/authMiddleware');
 const Video = require('../models/Video');
+const cloudinary = require('cloudinary').v2;
+const { Readable } = require('stream');
 
 const router = express.Router();
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
+// Multer setup for in-memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+// Cloudinary config (uses .env)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ✅ Upload video (protected route)
 router.post('/upload', verifyToken, upload.single('video'), async (req, res) => {
   const { title, description, price } = req.body;
-  const filePath = `/uploads/${req.file.filename}`;
+  const fileBuffer = req.file.buffer;
 
   try {
-    const newVideo = new Video({
-      title,
-      description,
-      filePath,
-      price: parseFloat(price) || 0,
-    });
+    // Upload to Cloudinary as a video
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: 'video', folder: 'videos' },
+      async (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          return res.status(500).json({ message: 'Cloudinary upload failed' });
+        }
 
-    await newVideo.save();
+        const newVideo = new Video({
+          title,
+          description,
+          filePath: result.secure_url, // Save Cloudinary video URL
+          price: parseFloat(price) || 0,
+        });
 
-    res.status(200).json({ message: 'Video uploaded successfully', video: newVideo });
+        await newVideo.save();
+        res.status(200).json({ message: 'Video uploaded successfully', video: newVideo });
+      }
+    );
+
+    Readable.from(fileBuffer).pipe(stream);
   } catch (err) {
     console.error('Upload error:', err);
     res.status(500).json({ message: 'Failed to upload video' });
@@ -57,7 +66,6 @@ router.get('/list', async (req, res) => {
 // ✅ Admin view - All uploaded videos
 router.get('/all', verifyToken, async (req, res) => {
   try {
-    // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied. Admins only.' });
     }

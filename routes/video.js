@@ -76,6 +76,7 @@ router.get('/all', verifyToken, async (req, res) => {
       filePath: v.filePath,
       description: v.description,
       price: v.price,
+      videoUrl: result.secure_url,
     }));
 
     res.status(200).json(formatted);

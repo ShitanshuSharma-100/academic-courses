@@ -4,7 +4,8 @@
   <script>
     const token = localStorage.getItem('authToken');
     if (!token) {
-      window.location.replace('/login.html');
+      localStorage.clear();
+      window.location.href = '/login.html';
     }
   </script>
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />

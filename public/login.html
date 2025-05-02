@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // Immediately remove any existing token when reaching the login page
+    localStorage.removeItem('authToken');
+  </script>
+  
   <meta charset="UTF-8">
   <title>Login</title>
   <style>

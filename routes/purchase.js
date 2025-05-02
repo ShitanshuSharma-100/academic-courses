@@ -46,7 +46,7 @@ router.get('/my', verifyToken, async (req, res) => {
       .map(p => ({
         id: p.videoId._id,
         title: p.videoId.title,
-        filePath: p.videoId.filePath,
+        videoUrl: p.videoId.videoUrl,
       }));
 
     res.status(200).json(purchasedVideos);

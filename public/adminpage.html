@@ -71,30 +71,66 @@
   <a href="/upload.html" class="back-btn">⬅ Back to Upload Page</a>
 
   <script>
-    const token = localStorage.getItem('authToken'); 
+    async function refreshAccessToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) throw new Error('No refresh token available');
+  
+      const res = await fetch('https://academic-courses.onrender.com/api/auth/refresh-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+  
+      if (!res.ok) throw new Error('Refresh token failed');
+  
+      const data = await res.json();
+      localStorage.setItem('authToken', data.accessToken);
+      return data.accessToken;
+    }
+  
+    async function fetchWithTokenRetry(url, options = {}) {
+      let token = localStorage.getItem('authToken');
+  
+      let res = await fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${token}`
+        }
+      });
+  
+      if (res.status === 403 || res.status === 401) {
+        try {
+          token = await refreshAccessToken();
+          res = await fetch(url, {
+            ...options,
+            headers: {
+              ...(options.headers || {}),
+              Authorization: `Bearer ${token}`
+            }
+          });
+        } catch (err) {
+          console.error('Token refresh failed:', err);
+          throw err;
+        }
+      }
+  
+      return res;
+    }
   
     async function loadAllVideos() {
       try {
-        const res = await fetch('/api/video/all', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-  
-        if (!res.ok) {
-          throw new Error('Failed to fetch videos');
-        }
+        const res = await fetchWithTokenRetry('https://academic-courses.onrender.com/api/video/all');
+        if (!res.ok) throw new Error('Failed to fetch videos');
   
         const videos = await res.json();
         const container = document.getElementById('videoList');
         container.innerHTML = '';
   
-        // Display the videos
         videos.forEach(video => {
           const card = document.createElement('div');
           card.className = 'video-card';
   
-          // Use Cloudinary URL instead of local file path
           card.innerHTML = `
             <h3>${video.title}</h3>
             <video controls width="100%" preload="metadata">
@@ -105,7 +141,6 @@
           container.appendChild(card);
         });
   
-        // Hide error message if successful
         document.getElementById('error-message').style.display = 'none';
       } catch (err) {
         console.error('Failed to load videos', err);
@@ -113,9 +148,9 @@
       }
     }
   
-    // Load videos on page load
     loadAllVideos();
   </script>
+  
   
 </body>
 </html>

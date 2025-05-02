@@ -100,45 +100,51 @@
       localStorage.removeItem('token');
       window.location.href = '/login.html';
     }
-
+  
     async function loadPurchasedVideos() {
-      const token = localStorage.getItem('token');
-
+      const token = localStorage.getItem('authToken');
+  
       try {
         const res = await fetch('/api/purchase/my', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-
-        const videos = await res.json();
+  
+        const data = await res.json();
+        console.log('Purchased videos response:', data);
+  
+        // Ensure 'data' is an array or fallback to 'data.videos' if it's an object
+        const videos = Array.isArray(data) ? data : data.videos;
+  
         const list = document.getElementById('purchasedList');
         list.innerHTML = '';
-
-        if (videos.length === 0) {
+  
+        if (!Array.isArray(videos) || videos.length === 0) {
           list.innerHTML = '<p style="text-align:center;">You haven\'t purchased any videos yet.</p>';
           return;
         }
-
+  
         videos.forEach(video => {
           const card = document.createElement('div');
           card.classList.add('video-card');
           card.innerHTML = `
             <h3>${video.title}</h3>
             <video controls controlsList="nodownload">
-              <source src="${video.filePath}" type="video/mp4">
+              <source src="${video.videoUrl}" type="video/mp4">
               Your browser does not support the video tag.
             </video>
           `;
           list.appendChild(card);
         });
-
+  
       } catch (err) {
         console.error('Error loading purchases:', err);
       }
     }
-
+  
     loadPurchasedVideos();
   </script>
+  
 </body>
 </html>

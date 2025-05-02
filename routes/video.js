@@ -70,16 +70,22 @@ router.get('/all', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Admins only.' });
     }
 
-    const videos = await Video.find({});
-    const formatted = videos.map(v => ({
-      title: v.title,
-      filePath: v.filePath,
-      description: v.description,
-      price: v.price,
-      videoUrl: v.secure_url,
-    }));
+    // Inside your upload handler:
+const uploaded = await cloudinary.uploader.upload(req.file.path, {
+  resource_type: 'video',
+  folder: 'videos'
+});
 
-    res.status(200).json(formatted);
+const newVideo = new Video({
+  title: req.body.title,
+  description: req.body.description,
+  price: req.body.price,
+  thumbnailUrl: req.body.thumbnailUrl,
+  videoUrl: uploaded.secure_url  // ✅ use 'uploaded', or rename it to 'result' if you prefer
+});
+
+await newVideo.save();
+res.status(200).json({ message: 'Video uploaded successfully' });
   } catch (err) {
     console.error('Error loading all videos:', err);
     res.status(500).json({ message: 'Server error loading videos' });
